@@ -4,10 +4,10 @@ import 'memo.dart';
 class EditPage extends StatefulWidget {
   final Memo? memo;
 
-  EditPage({this.memo});
+  const EditPage({super.key, this.memo});
 
   @override
-  _EditPageState createState() => _EditPageState();
+  State<EditPage> createState() => _EditPageState();
 }
 
 class _EditPageState extends State<EditPage> {
@@ -17,52 +17,102 @@ class _EditPageState extends State<EditPage> {
   @override
   void initState() {
     super.initState();
-    titleController = TextEditingController(text: widget.memo?.title ?? '');
-    contentController = TextEditingController(text: widget.memo?.content ?? '');
+
+    titleController =
+        TextEditingController(text: widget.memo?.title ?? '');
+
+    contentController =
+        TextEditingController(text: widget.memo?.content ?? '');
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    contentController.dispose();
+    super.dispose();
+  }
+
+  void saveMemo() {
+
+    // タイトル必須
+    if (titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("タイトルを入力してください"),
+        ),
+      );
+      return;
+    }
+
+    final memo = Memo(
+      title: titleController.text.trim(),
+      content: contentController.text.trim(),
+
+      // 新規なら現在時刻
+      createdAt: widget.memo?.createdAt,
+
+      // 更新日時は常に現在
+      updatedAt: DateTime.now(),
+    );
+
+    Navigator.pop(context, memo);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.memo == null ? '新規メモ' : 'メモ編集'),
+        title: Text(widget.memo == null ? "新規メモ" : "メモ編集"),
         actions: [
+
           if (widget.memo != null)
             IconButton(
-              icon: Icon(Icons.delete),
+              icon: const Icon(Icons.delete),
               onPressed: () {
-                Navigator.pop(context, 'delete');
+
+                Navigator.pop(context, "delete");
+
               },
             ),
+
         ],
       ),
+
       body: Padding(
         padding: const EdgeInsets.all(16),
+
         child: Column(
           children: [
+
             TextField(
               controller: titleController,
-              decoration: InputDecoration(labelText: 'タイトル'),
+              decoration: const InputDecoration(
+                labelText: "タイトル",
+              ),
             ),
-            SizedBox(height: 8),
+
+            const SizedBox(height: 10),
+
             Expanded(
               child: TextField(
                 controller: contentController,
-                decoration: InputDecoration(labelText: '本文'),
-                maxLines: null,
+                decoration: const InputDecoration(
+                  labelText: "本文",
+                  alignLabelWithHint: true,
+                ),
                 expands: true,
+                maxLines: null,
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                final memo = Memo(
-                  
-                  title: titleController.text,
-                  content: contentController.text,
-                );
-                Navigator.pop(context, memo);
-              },
-              child: Text('保存'),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: saveMemo,
+                child: const Text("保存"),
+              ),
             ),
           ],
         ),
